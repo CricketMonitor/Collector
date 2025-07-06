@@ -283,8 +283,8 @@ func collectSystemMetrics(config Config) (*MetricsPayload, error) {
 		var running, sleeping uint64
 		for _, proc := range processes {
 			status, err := proc.Status()
-			if err == nil {
-				switch status {
+			if err == nil && len(status) > 0 {
+				switch status[0] {
 				case "R", "Running":
 					running++
 				case "S", "Sleeping":

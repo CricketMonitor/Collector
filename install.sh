@@ -128,12 +128,36 @@ install_binary() {
     log_info "Installing binary to $INSTALL_DIR"
     
     run_as_root mkdir -p "$INSTALL_DIR"
+    
+    # Check if service is running and stop it temporarily for upgrade
+    local service_was_running=false
+    if run_as_root systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+        log_info "Stopping $SERVICE_NAME service for upgrade..."
+        run_as_root systemctl stop "$SERVICE_NAME"
+        service_was_running=true
+        sleep 2  # Give the process time to fully stop
+    fi
+    
+    # Install the new binary
     run_as_root cp "/tmp/cricket-collector" "$INSTALL_DIR/cricket-collector"
     run_as_root chmod +x "$INSTALL_DIR/cricket-collector"
     run_as_root chown -R "$USER_NAME:$USER_NAME" "$INSTALL_DIR"
     
     # Create symlink for global access
     run_as_root ln -sf "$INSTALL_DIR/cricket-collector" "/usr/local/bin/cricket-collector"
+    
+    # Restart service if it was running
+    if [ "$service_was_running" = true ]; then
+        log_info "Restarting $SERVICE_NAME service..."
+        run_as_root systemctl start "$SERVICE_NAME"
+        
+        # Verify it started successfully
+        if run_as_root systemctl is-active --quiet "$SERVICE_NAME"; then
+            log_success "Service restarted successfully"
+        else
+            log_warning "Service may have failed to start. Check: sudo systemctl status $SERVICE_NAME"
+        fi
+    fi
     
     log_success "Binary installed to $INSTALL_DIR"
 }
@@ -200,25 +224,46 @@ EOF
     log_success "Systemd service installed and enabled"
 }
 
-prompt_for_api_key() {
+show_completion_message() {
+    local config_file="$INSTALL_DIR/.env"
+    
     echo ""
-    log_info "The collector is installed but needs an API key to function."
-    echo ""
-    echo "To complete the setup:"
-    echo "1. Visit https://cricketmon.io/dashboard/servers"
-    echo "2. Generate your account API key (one key works for all servers)"
-    echo "3. Set your API key: sudo nano $INSTALL_DIR/.env"
-    echo "4. Update: CRICKET_API_KEY=your_api_key_here"
-    echo "5. Start the service: sudo systemctl start $SERVICE_NAME"
-    echo ""
-    echo "Your server will automatically register when it starts sending metrics!"
-    echo ""
-    echo "You can check the service status with:"
-    echo "  sudo systemctl status $SERVICE_NAME"
-    echo ""
-    echo "View logs with:"
-    echo "  sudo journalctl -u $SERVICE_NAME -f"
-    echo ""
+    
+    # Check if this is a fresh install or upgrade
+    if [ -f "$config_file" ] && grep -q "CRICKET_API_KEY=" "$config_file" && [ -n "$(grep "CRICKET_API_KEY=" "$config_file" | cut -d'=' -f2)" ]; then
+        # Existing installation with API key
+        log_success "Cricket Monitor collector has been updated successfully!"
+        echo ""
+        echo "The collector service has been restarted with the new version."
+        echo ""
+        echo "You can check the service status with:"
+        echo "  sudo systemctl status $SERVICE_NAME"
+        echo ""
+        echo "View logs with:"
+        echo "  sudo journalctl -u $SERVICE_NAME -f"
+        echo ""
+        echo "Check collector version:"
+        echo "  /opt/cricket-collector/cricket-collector --version"
+    else
+        # Fresh installation
+        log_info "The collector is installed but needs an API key to function."
+        echo ""
+        echo "To complete the setup:"
+        echo "1. Visit https://cricketmon.io/dashboard/servers"
+        echo "2. Generate your account API key (one key works for all servers)"
+        echo "3. Set your API key: sudo nano $INSTALL_DIR/.env"
+        echo "4. Update: CRICKET_API_KEY=your_api_key_here"
+        echo "5. Start the service: sudo systemctl start $SERVICE_NAME"
+        echo ""
+        echo "Your server will automatically register when it starts sending metrics!"
+        echo ""
+        echo "You can check the service status with:"
+        echo "  sudo systemctl status $SERVICE_NAME"
+        echo ""
+        echo "View logs with:"
+        echo "  sudo journalctl -u $SERVICE_NAME -f"
+        echo ""
+    fi
 }
 
 cleanup() {
@@ -243,7 +288,7 @@ main() {
     cleanup
     
     log_success "Installation completed successfully!"
-    prompt_for_api_key
+    show_completion_message
 }
 
 # Trap cleanup on exit

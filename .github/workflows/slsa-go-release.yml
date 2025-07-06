@@ -31,8 +31,9 @@ jobs:
       actions: read   # To read workflow path.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
     with:
-      go-version: 1.21
+      go-version: '1.21'
       config-file: .slsa-goreleaser-amd64.yml
+      compile-builder: true
       
   build-arm64:
     permissions:
@@ -41,8 +42,9 @@ jobs:
       actions: read   # To read workflow path.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
     with:
-      go-version: 1.21
+      go-version: '1.21'
       config-file: .slsa-goreleaser-arm64.yml
+      compile-builder: true
       
   build-386:
     permissions:
@@ -51,5 +53,6 @@ jobs:
       actions: read   # To read workflow path.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
     with:
-      go-version: 1.21
+      go-version: '1.21'
       config-file: .slsa-goreleaser-386.yml
+      compile-builder: true
