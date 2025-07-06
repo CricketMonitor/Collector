@@ -1,49 +1,18 @@
 # .slsa-goreleaser.yml
-# Configuration for SLSA3 Go releaser v2
+# Configuration for SLSA3 Go releaser
 
 version: 1
 
-# Define the build matrix
-builds:
-  - goos: linux
-    goarch: amd64
-    binary: cricket-collector-{{ .Os }}-{{ .Arch }}
-    dir: .
-    main: ./main.go
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.Date}}
-  
-  - goos: linux
-    goarch: arm64
-    binary: cricket-collector-{{ .Os }}-{{ .Arch }}
-    dir: .
-    main: ./main.go
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.Date}}
-  
-  - goos: linux
-    goarch: "386"
-    binary: cricket-collector-{{ .Os }}-{{ .Arch }}
-    dir: .
-    main: ./main.go
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.Date}}
-
-# Env for all builds
 env:
   - CGO_ENABLED=0
+  - GOOS=linux
+
+main: ./main.go
+dir: .
+flags:
+  - -trimpath
+ldflags:
+  - -s -w
+
+goos: linux
+goarch: amd64
