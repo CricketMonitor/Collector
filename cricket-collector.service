@@ -1,0 +1,16 @@
+[Unit]
+Description=Cricket Monitor Performance Collector
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=cricket
+ExecStart=/usr/local/bin/cricket-collector
+WorkingDirectory=/opt/cricket-collector
+EnvironmentFile=/opt/cricket-collector/.env
+
+[Install]
+WantedBy=multi-user.target
