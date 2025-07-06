@@ -1,0 +1,17 @@
+# .slsa-goreleaser-386.yml
+# Configuration for SLSA3 Go releaser - 386
+
+version: 1
+
+env:
+  - CGO_ENABLED=0
+  - GOOS=linux
+  - GOARCH=386
+
+main: ./main.go
+dir: .
+binary: cricket-collector-linux-386
+flags:
+  - -trimpath
+ldflags:
+  - -s -w

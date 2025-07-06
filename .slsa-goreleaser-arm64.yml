@@ -1,0 +1,17 @@
+# .slsa-goreleaser-arm64.yml
+# Configuration for SLSA3 Go releaser - ARM64
+
+version: 1
+
+env:
+  - CGO_ENABLED=0
+  - GOOS=linux
+  - GOARCH=arm64
+
+main: ./main.go
+dir: .
+binary: cricket-collector-linux-arm64
+flags:
+  - -trimpath
+ldflags:
+  - -s -w

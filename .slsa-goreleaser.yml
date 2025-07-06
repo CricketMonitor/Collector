@@ -9,6 +9,7 @@ env:
 
 main: ./main.go
 dir: .
+binary: cricket-collector
 flags:
   - -trimpath
 ldflags:
