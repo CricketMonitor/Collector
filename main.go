@@ -22,6 +22,13 @@ import (
 	"github.com/shirou/gopsutil/v3/net"
 )
 
+// Build-time variables (injected during build)
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
 type Config struct {
 	APIBaseURL      string
 	APIKey          string
@@ -86,11 +93,22 @@ type DiskDevice struct {
 }
 
 func main() {
+	// Check for version flag
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("Cricket Monitor Collector\n")
+		fmt.Printf("Version: %s\n", version)
+		fmt.Printf("Commit: %s\n", commit)
+		fmt.Printf("Built: %s\n", date)
+		fmt.Printf("Go Version: %s\n", runtime.Version())
+		fmt.Printf("OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
+		return
+	}
+
 	// Load environment variables
 	godotenv.Load()
 
 	config := Config{
-		APIBaseURL:      getEnv("CRICKET_API_URL", "http://localhost:3002"),
+		APIBaseURL:      "https://collector.cricketmon.io",
 		APIKey:          getEnv("CRICKET_API_KEY", ""),
 		ServerName:      getEnv("CRICKET_SERVER_NAME", ""),
 		CollectInterval: getEnvInt("CRICKET_COLLECT_INTERVAL", 60),

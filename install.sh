@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 INSTALL_DIR="/opt/cricket-collector"
 SERVICE_NAME="cricket-collector"
 USER_NAME="cricket"
-BINARY_URL_BASE="https://github.com/cricket-monitor/collector/releases/latest/download"
+BINARY_URL_BASE="https://github.com/CricketMonitor/collector/releases/latest/download"
 
 # Functions
 log_info() {
@@ -90,22 +90,28 @@ download_binary() {
     local download_url="${BINARY_URL_BASE}/${binary_name}"
     
     log_info "Detecting architecture: ${arch}"
+    log_info "Downloading collector binary from: ${download_url}"
     
-    # For development/demo, provide instructions instead of trying to download
-    log_error "Binary download not yet implemented for development."
-    log_info ""
-    log_info "To install the Cricket Monitor collector manually:"
-    log_info "1. Clone the repository:"
-    log_info "   git clone https://github.com/your-org/cricket-monitor.git"
-    log_info "2. Build the collector:"
-    log_info "   cd cricket-monitor/collectors/linux-collector"
-    log_info "   go mod tidy && go build -o cricket-collector main.go"
-    log_info "3. Run the manual installation:"
-    log_info "   sudo cp cricket-collector /usr/local/bin/"
-    log_info "   sudo chmod +x /usr/local/bin/cricket-collector"
-    log_info ""
-    log_info "For production, this script will download pre-built binaries from GitHub releases."
-    exit 1
+    # Download the binary
+    if ! curl -fsSL -o "/tmp/cricket-collector" "$download_url"; then
+        log_error "Failed to download binary from: ${download_url}"
+        log_info ""
+        log_info "Alternative installation options:"
+        log_info "1. Check if a release exists at: https://github.com/CricketMonitor/collector/releases"
+        log_info "2. Manual build from source:"
+        log_info "   git clone https://github.com/CricketMonitor/collector.git"
+        log_info "   cd collector/collectors/linux-collector"
+        log_info "   go mod tidy && go build -o cricket-collector main.go"
+        exit 1
+    fi
+    
+    # Verify the binary is executable
+    if ! chmod +x "/tmp/cricket-collector"; then
+        log_error "Failed to make binary executable"
+        exit 1
+    fi
+    
+    log_success "Binary downloaded successfully"
 }
 
 create_user() {
@@ -142,7 +148,6 @@ create_config() {
 # Cricket Monitor Performance Collector Configuration
 
 # API Configuration (REQUIRED)
-CRICKET_API_URL=https://collector.cricketmon.io
 CRICKET_API_KEY=
 
 # Server Configuration (OPTIONAL - defaults to hostname)
