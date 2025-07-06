@@ -20,6 +20,7 @@ import (
 	"github.com/shirou/gopsutil/v3/load"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/net"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 // Build-time variables (injected during build)
@@ -45,6 +46,21 @@ type MetricsPayload struct {
 	OperatingSystem string            `json:"operating_system"`
 	Architecture    string            `json:"architecture"`
 	Tags            map[string]string `json:"tags,omitempty"`
+	
+	// System information
+	UptimeSeconds     uint64 `json:"uptime_seconds"`
+	BootTime          uint64 `json:"boot_time"`
+	KernelVersion     string `json:"kernel_version"`
+	PlatformFamily    string `json:"platform_family"`
+	PlatformVersion   string `json:"platform_version"`
+	CPUModel          string `json:"cpu_model"`
+	CPUCores          int32  `json:"cpu_cores"`
+	CPUThreads        int32  `json:"cpu_threads"`
+	TotalProcesses    uint64 `json:"total_processes"`
+	RunningProcesses  uint64 `json:"running_processes"`
+	SleepingProcesses uint64 `json:"sleeping_processes"`
+	HostID            string `json:"host_id"`
+	Virtualization    string `json:"virtualization"`
 	
 	// Metrics fields
 	Timestamp             string  `json:"timestamp"`
@@ -210,8 +226,25 @@ func collectSystemMetrics(config Config) (*MetricsPayload, error) {
 			"version":   "1.0.0",
 		},
 		
+		// System information
+		UptimeSeconds:   hostInfo.Uptime,
+		BootTime:        hostInfo.BootTime,
+		KernelVersion:   hostInfo.KernelVersion,
+		PlatformFamily:  hostInfo.PlatformFamily,
+		PlatformVersion: hostInfo.PlatformVersion,
+		HostID:          hostInfo.HostID,
+		Virtualization:  hostInfo.VirtualizationSystem,
+		
 		// Metrics
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// CPU information
+	cpuInfo, err := cpu.Info()
+	if err == nil && len(cpuInfo) > 0 {
+		payload.CPUModel = cpuInfo[0].ModelName
+		payload.CPUCores = cpuInfo[0].Cores
+		payload.CPUThreads = int32(len(cpuInfo)) // Total logical CPUs
 	}
 
 	// CPU metrics
@@ -242,6 +275,26 @@ func collectSystemMetrics(config Config) (*MetricsPayload, error) {
 	if err == nil {
 		payload.SwapUsedBytes = swapInfo.Used
 		payload.SwapTotalBytes = swapInfo.Total
+	}
+
+	// Process counts
+	processes, err := process.Processes()
+	if err == nil {
+		var running, sleeping uint64
+		for _, proc := range processes {
+			status, err := proc.Status()
+			if err == nil {
+				switch status {
+				case "R", "Running":
+					running++
+				case "S", "Sleeping":
+					sleeping++
+				}
+			}
+		}
+		payload.TotalProcesses = uint64(len(processes))
+		payload.RunningProcesses = running
+		payload.SleepingProcesses = sleeping
 	}
 
 	// Disk metrics (root filesystem)
