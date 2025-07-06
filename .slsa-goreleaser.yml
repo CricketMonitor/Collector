@@ -1,0 +1,59 @@
+# .slsa-goreleaser.yml
+# Configuration for SLSA3 Go releaser
+
+version: 1
+
+# Source configuration
+source:
+  # Path to the Go module directory
+  dir: ./
+
+# Build configuration
+builds:
+  - id: linux-amd64
+    dir: ./
+    main: ./main.go
+    binary: cricket-collector-linux-amd64
+    env:
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=amd64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+  - id: linux-arm64
+    dir: ./
+    main: ./main.go
+    binary: cricket-collector-linux-arm64
+    env:
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+  - id: linux-386
+    dir: ./collectors/linux-collector
+    main: ./main.go
+    binary: cricket-collector-linux-386
+    env:
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=386
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
