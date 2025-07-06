@@ -1,17 +1,13 @@
-# .slsa-goreleaser-amd64.yml
-# Configuration for SLSA3 Go releaser - AMD64
-
 version: 1
-
-env:
-  - CGO_ENABLED=0
-  - GOOS=linux
-  - GOARCH=amd64
-
 main: ./main.go
 dir: .
 binary: cricket-collector-linux-amd64
+env:
+  - CGO_ENABLED=0
 flags:
   - -trimpath
+  - -buildmode=exe
 ldflags:
   - -s -w
+goos: linux
+goarch: amd64
