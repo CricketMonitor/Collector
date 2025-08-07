@@ -1,5 +1,8 @@
 # Cricket Monitor Performance Collector
 
+[Monitor your website uptime with CricketMon](https://cricketmon.io)
+
+
 A lightweight Go application that collects system performance metrics from Linux servers and sends them to the Cricket Monitor Performance API.
 
 ## Features
